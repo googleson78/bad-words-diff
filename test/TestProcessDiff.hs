@@ -14,6 +14,10 @@ import qualified Data.Text as T
 
 test_filterNocpp = assertEqual ((fmap onlyRequired nocpp) :: Either String FileDeltas) (Right [])
 
+test_filterAllcpp = assertEqual ((fmap onlyRequired allcpp) :: Either String FileDeltas) allcpp
+
+test_filterSomecpp = assertNotEqual ((fmap onlyRequired somecpp) :: Either String FileDeltas) somecpp
+
 
 nocpp = Right [FileDelta {fileDeltaStatus = Modified, fileDeltaSourceFile = "package.yaml", fileDeltaDestFile = "package.yaml", fileDeltaContent = Hunks [Hunk {hunkSourceRange = Range {rangeStartingLineNumber = 11, rangeNumberOfLines = 1}, hunkDestRange = Range {rangeStartingLineNumber = 10,
 rangeNumberOfLines = 0}, hunkLines = [Line {lineAnnotation = Removed, lineContent = "- ChangeLog.md"}]}]}]

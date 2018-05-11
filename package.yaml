@@ -23,6 +23,8 @@ dependencies:
 - process
 - diff-parse
 - text
+- HTF
+- QuickCheck
 
 library:
   source-dirs: src
@@ -40,7 +42,7 @@ executables:
 
 tests:
   bad-words-diff-test:
-    main:                Spec.hs
+    main:                TestMain.hs
     source-dirs:         test
     ghc-options:
     - -threaded

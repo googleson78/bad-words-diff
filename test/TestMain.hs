@@ -5,5 +5,7 @@ import Test.Framework
 import {-@ HTF_TESTS @-} TestProcessDiff
 import {-@ HTF_TESTS @-} TestGenerateHTML
 
+args = Args Nothing 500 50 7 True 9223372036854775807
+
 main :: IO ()
-main = htfMain htf_importedTests
+main = setDefaultArgs args >> htfMain htf_importedTests

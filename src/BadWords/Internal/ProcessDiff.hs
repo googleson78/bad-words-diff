@@ -2,8 +2,6 @@
 module BadWords.Internal.ProcessDiff
         (isRequiredFile
         ,filterDiffBySuffixes
-        ,suffixes
-        ,keywords
         ,badWordsFromDiff
         ,BadWords(..)
         ) where
@@ -15,30 +13,24 @@ import Data.Maybe
 import BadWords.Types
 import qualified Data.Text as T
 
-suffixes :: [T.Text]
-suffixes = [".h", ".cpp"]
-keywords :: [T.Text]
-keywords = ["strcpy", "sprintf"]
-
-
-isRequiredFile :: FileDelta -> Bool
-isRequiredFile (FileDelta _ src dst _) = or $ T.isSuffixOf <$> suffixes <*> filenames
+isRequiredFile :: [T.Text] -> FileDelta -> Bool
+isRequiredFile suffixes (FileDelta _ src dst _) = or $ T.isSuffixOf <$> suffixes <*> filenames
     where filenames = [src, dst]
 
-filterDiffBySuffixes :: [FileDelta] -> [FileDelta]
-filterDiffBySuffixes = mfilter isRequiredFile
+filterDiffBySuffixes :: [T.Text] -> [FileDelta] -> [FileDelta]
+filterDiffBySuffixes suffixes = mfilter $ isRequiredFile suffixes
 
-hasBadWord :: Line -> Bool
-hasBadWord (Line _ text) = or $ fmap (T.isInfixOf `flip` text) keywords
+hasBadWord :: [T.Text] -> Line -> Bool
+hasBadWord keywords (Line _ text) = or $ fmap (T.isInfixOf `flip` text) keywords
 
 
 tagListIx :: [a] -> [(Int, a)]
 tagListIx = zip [0..]
 
-taggedBadLines :: Hunk -> [(LineNum, Line)]
-taggedBadLines (Hunk srcRng dstRng lns) = badLines
+taggedBadLines :: [T.Text] -> Hunk -> [(LineNum, Line)]
+taggedBadLines keywords (Hunk srcRng dstRng lns) = badLines
     where tagged   = tagListIx lns
-          filtered = filter (hasBadWord . snd) tagged
+          filtered = filter (hasBadWord keywords . snd) tagged
           badLines = fmap offsetLineNum filtered
 
           offsetLineNum :: (LineNum, Line) -> (LineNum, Line)
@@ -52,17 +44,17 @@ taggedBadLines (Hunk srcRng dstRng lns) = badLines
           modWithRange (Range start _) = (+start)
 
 
-badWordsFromDelta :: FileDelta -> Maybe BadWords
-badWordsFromDelta (FileDelta _ _ _ Binary)            = Nothing
-badWordsFromDelta (FileDelta stat src dst (Hunks hs)) = case badLines of
-                                                         [] -> Nothing
-                                                         lns -> Just $ BadWords name lns
-    where badLines = hs >>= taggedBadLines
+badWordsFromDelta :: [T.Text] -> FileDelta -> Maybe BadWords
+badWordsFromDelta keywords (FileDelta _ _ _ Binary)            = Nothing
+badWordsFromDelta keywords (FileDelta stat src dst (Hunks hs)) = case badLines of
+                                                                  [] -> Nothing
+                                                                  lns -> Just $ BadWords name lns
+    where badLines = hs >>= taggedBadLines keywords
           name = whichFile stat
 
           whichFile :: FileStatus -> T.Text
           whichFile Deleted = src
           whichFile _       = dst
 
-badWordsFromDiff :: [FileDelta] -> [BadWords]
-badWordsFromDiff diff = diff >>= (maybeToList . badWordsFromDelta)
+badWordsFromDiff :: [T.Text] -> [FileDelta] -> [BadWords]
+badWordsFromDiff keywords diff = diff >>= (maybeToList . badWordsFromDelta keywords)

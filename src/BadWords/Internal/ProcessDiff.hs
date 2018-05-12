@@ -6,12 +6,9 @@ module BadWords.Internal.ProcessDiff
         ,keywords
         ,badWordsFromDiff
         ,BadWords(..)
-        ,wtf
         ) where
 
-import Text.Diff.Parse
 import Text.Diff.Parse.Types
-import System.Process
 import Control.Monad
 import Data.Functor()
 import Data.Maybe
@@ -33,6 +30,7 @@ onlyRequired = mfilter isRequiredFile
 
 hasBadWord :: Line -> Bool
 hasBadWord (Line _ text) = or $ fmap (T.isInfixOf `flip` text) keywords
+
 
 tagListIx :: [a] -> [(Int, a)]
 tagListIx = zip [0..]
@@ -68,14 +66,3 @@ badWordsFromDelta (FileDelta stat src dst (Hunks hs)) = case badLines of
 
 badWordsFromDiff :: [FileDelta] -> [BadWords]
 badWordsFromDiff diff = diff >>= (maybeToList . badWordsFromDelta)
-
--- testing
-diffproc :: CreateProcess
-diffproc = shell "git -C ~/git/testing-badwords diff HEAD^ HEAD"
-
-wtf :: IO ()
-wtf = do
-    b <- readCreateProcess diffproc ""
-    putStr b
-    putStrLn (map (const '=') [1..100])
-    print $ parseDiff $ T.pack b

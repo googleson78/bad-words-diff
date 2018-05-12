@@ -4,8 +4,6 @@ module BadWords.Internal.ProcessDiff
         ,onlyRequired
         ,suffixes
         ,keywords
-        ,hasBadWords
-        ,onlyBadWordDiffs
         ,badWordsFromDiff
         ,BadWords(..)
         ,wtf
@@ -17,6 +15,7 @@ import System.Process
 import Control.Monad
 import Data.Functor()
 import Data.Maybe
+import BadWords.Types
 import qualified Data.Text as T
 
 suffixes :: [T.Text]
@@ -29,26 +28,8 @@ isRequiredFile :: FileDelta -> Bool
 isRequiredFile (FileDelta _ src dst _) = or $ T.isSuffixOf <$> suffixes <*> filenames
     where filenames = [src, dst]
 
-
 onlyRequired :: [FileDelta] -> [FileDelta]
 onlyRequired = mfilter isRequiredFile
-
-
-hasBadWords :: FileDelta -> Bool
-hasBadWords (FileDelta _ _ _ (Hunks hunks)) = or $ T.isInfixOf <$> keywords <*> diffLines
-    where diffLines = lineContent <$> (hunks >>= hunkLines)
-hasBadWords (FileDelta _ _ _ Binary) = False
-
-
-onlyBadWordDiffs :: [FileDelta] -> [FileDelta]
-onlyBadWordDiffs = mfilter hasBadWords
-
-
-type LineNum = Int
-
-data BadWords = BadWords {fileName :: T.Text,
-                          lines    :: [(LineNum, Line)]}
-    deriving (Eq, Show)
 
 hasBadWord :: Line -> Bool
 hasBadWord (Line _ text) = or $ fmap (T.isInfixOf `flip` text) keywords

@@ -8,6 +8,7 @@ module TestProcessDiff
 import Data.Either
 import Data.List
 import BadWords.Internal.ProcessDiff
+import BadWords.Types
 import Test.Framework
 import Text.Diff.Parse
 import Text.Diff.Parse.Types
@@ -27,30 +28,6 @@ test_filterAllcpp = assertEqual result expected
 test_filterSomecpp = assertNotEqual result expected
     where result   = (fmap onlyRequired somecpp) :: Either String FileDeltas
           expected = somecpp
-
-
--- bad word filtration tests
-test_filterNobad = assertEqual result expected
-    where result   = (fmap onlyBadWordDiffs nocpp) :: Either String FileDeltas
-          expected = Right []
-
-test_filterIntroducebad1 = (assertElem "asdf.cpp"  listOfFilteredNames) *>
-                          (assertElem "asdfC.cpp" listOfFilteredNames)
-    where filtered            = (fmap (onlyBadWordDiffs . onlyRequired) allcpp) :: Either String FileDeltas
-          listOfFilteredNames = nub $ fmap fileDeltaSourceFile (fromRight [] filtered) ++
-                                      fmap fileDeltaDestFile   (fromRight [] filtered)
-
-test_filterIntroducebad2 = (assertElem "asqwe.h"  listOfFilteredNames)
-    where filtered            = (fmap (onlyBadWordDiffs . onlyRequired) somecpp) :: Either String FileDeltas
-          listOfFilteredNames = nub $ fmap fileDeltaSourceFile (fromRight [] filtered) ++
-                                      fmap fileDeltaDestFile   (fromRight [] filtered)
-
--- test for introduction in bad words only in some files
-test_filterIntroducebad3 = (assertElem "asdf.cpp"  listOfFilteredNames) *>
-                           (assertBool $ not $ "asqwe.h" `elem` listOfFilteredNames)
-    where filtered            = (fmap (onlyBadWordDiffs . onlyRequired) somebad) :: Either String FileDeltas
-          listOfFilteredNames = nub $ fmap fileDeltaSourceFile (fromRight [] filtered) ++
-                                      fmap fileDeltaDestFile   (fromRight [] filtered)
 
 
 -- bad words + lines test

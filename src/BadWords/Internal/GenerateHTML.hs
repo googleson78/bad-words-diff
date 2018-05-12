@@ -29,3 +29,27 @@ splitEntire word l@(T.uncons -> Just (x, xs))
     | otherwise             = (T.cons x next) : rest
     where stripped = fromJust $ T.stripPrefix word l
           (next:rest) = splitEntire word xs
+
+redSpan_   = span_ [style_ "color:red"] 
+greenSpan_ = span_ [style_ "color:green"] 
+greySpan_  = span_ [style_ "color:grey"] 
+blackSpan_ = span_ [style_ "color:black"] 
+
+annoToColouredSym :: Annotation -> Html ()
+annoToColouredSym Added   = greenSpan_ $ toHtml "+"
+annoToColouredSym Removed = redSpan_   $ toHtml "-"
+annoToColouredSym Context = toHtml " "
+
+colourBad :: T.Text -> T.Text -> Html ()
+colourBad bad word 
+    | word == bad = redSpan_ $ toHtml $ word
+    | otherwise   = toHtml word
+
+
+colourBadWord :: T.Text -> (LineNum, Line) -> Html ()
+colourBadWord badword (n, (Line anno text)) = formatted
+    where split = splitEntire badword text
+          coloured = foldMap (colourBad badword) split
+          colouredAnno = annoToColouredSym anno
+          lineNum = greySpan_ $ toHtml $ T.pack $ show $ n
+          formatted = lineNum <> colouredAnno <> coloured

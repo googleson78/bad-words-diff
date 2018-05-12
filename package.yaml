@@ -24,7 +24,6 @@ dependencies:
 - diff-parse
 - text
 - HTF
-- QuickCheck
 
 library:
   source-dirs: src

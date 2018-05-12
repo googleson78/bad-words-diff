@@ -18,15 +18,15 @@ import qualified Data.Text as T
 
 -- file extensions filtration tests
 test_filterNocpp = assertEqual result expected
-    where result   = (fmap onlyRequired nocpp) :: Either String FileDeltas
+    where result   = (fmap filterDiffBySuffixes nocpp) :: Either String FileDeltas
           expected = Right []
 
 test_filterAllcpp = assertEqual result expected
-    where result   = (fmap onlyRequired allcpp) :: Either String FileDeltas
+    where result   = (fmap filterDiffBySuffixes allcpp) :: Either String FileDeltas
           expected = allcpp
 
 test_filterSomecpp = assertNotEqual result expected
-    where result   = (fmap onlyRequired somecpp) :: Either String FileDeltas
+    where result   = (fmap filterDiffBySuffixes somecpp) :: Either String FileDeltas
           expected = somecpp
 
 
@@ -36,17 +36,17 @@ test_badWordsNocpp = assertEqual result expected
           expected =  (Right [])
 
 test_badWordsintroduced1 = assertEqual result expected
-    where result   = ((fmap (badWordsFromDiff . onlyRequired) allcpp) :: Either String [BadWords]) 
+    where result   = ((fmap (badWordsFromDiff . filterDiffBySuffixes) allcpp) :: Either String [BadWords]) 
           expected = Right $ [(BadWords "asdf.cpp" [(6, Line Added "    sprintf(\"%%%ASDQ!@#\", lol);")]),
                               (BadWords "asdfC.cpp" [(12 , Line Added "    strcpy(lol, \"42\");")])]
 
 test_badWordsintroduced2 = assertEqual result expected
-    where result   = ((fmap (badWordsFromDiff . onlyRequired) somebad) :: Either String [BadWords]) 
+    where result   = ((fmap (badWordsFromDiff . filterDiffBySuffixes) somebad) :: Either String [BadWords]) 
           expected = Right $ [BadWords "asdf.cpp" [(12, Line Added "    strcpy(\"kek\");"),
                                                    (15, Line Added "    more strcpy;")]]
 
 test_badWordsremoved1 = assertEqual result expected
-    where result   = ((fmap (badWordsFromDiff . onlyRequired) removebad) :: Either String [BadWords]) 
+    where result   = ((fmap (badWordsFromDiff . filterDiffBySuffixes) removebad) :: Either String [BadWords]) 
           expected = Right $ [BadWords "asdfC.cpp" [(12, Line Removed "    strcpy(lol, \"42\");")]]
 
 

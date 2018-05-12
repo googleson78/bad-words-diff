@@ -1,4 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
-module BadWords.ProcessDiff where
+module BadWords.ProcessDiff
+    (badWordsFromDiff
+    ,filterDiffBySuffixes
+    ) where
 
 import BadWords.Internal.ProcessDiff

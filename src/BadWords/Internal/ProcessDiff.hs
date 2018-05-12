@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module BadWords.Internal.ProcessDiff
         (isRequiredFile
-        ,onlyRequired
+        ,filterDiffBySuffixes
         ,suffixes
         ,keywords
         ,badWordsFromDiff
@@ -25,8 +25,8 @@ isRequiredFile :: FileDelta -> Bool
 isRequiredFile (FileDelta _ src dst _) = or $ T.isSuffixOf <$> suffixes <*> filenames
     where filenames = [src, dst]
 
-onlyRequired :: [FileDelta] -> [FileDelta]
-onlyRequired = mfilter isRequiredFile
+filterDiffBySuffixes :: [FileDelta] -> [FileDelta]
+filterDiffBySuffixes = mfilter isRequiredFile
 
 hasBadWord :: Line -> Bool
 hasBadWord (Line _ text) = or $ fmap (T.isInfixOf `flip` text) keywords

@@ -51,5 +51,6 @@ colourBadWord badword (n, (Line anno text)) = formatted
     where split = splitEntire badword text
           coloured = foldMap (colourBad badword) split
           colouredAnno = annoToColouredSym anno
+          lineNum :: Html () -- huh?
           lineNum = greySpan_ $ toHtml $ T.pack $ show $ n
           formatted = lineNum <> colouredAnno <> coloured

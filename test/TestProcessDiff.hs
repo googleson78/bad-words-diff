@@ -3,6 +3,7 @@
 module TestProcessDiff
     (htf_thisModulesTests
     ) where
+-- Abandon All Hope, Ye Who Enter Here
 
 import Data.Either
 import Data.List
@@ -52,6 +53,26 @@ test_filterIntroducebad3 = (assertElem "asdf.cpp"  listOfFilteredNames) *>
                                       fmap fileDeltaDestFile   (fromRight [] filtered)
 
 
+-- bad words + lines test
+test_badWordsNocpp = assertEqual result expected
+    where result   = ((fmap badWordsFromDiff nocpp) :: Either String [BadWords])
+          expected =  (Right [])
+
+test_badWordsintroduced1 = assertEqual result expected
+    where result   = ((fmap (badWordsFromDiff . onlyRequired) allcpp) :: Either String [BadWords]) 
+          expected = Right $ [(BadWords "asdf.cpp" [(6, Line Added "    sprintf(\"%%%ASDQ!@#\", lol);")]),
+                              (BadWords "asdfC.cpp" [(12 , Line Added "    strcpy(lol, \"42\");")])]
+
+test_badWordsintroduced2 = assertEqual result expected
+    where result   = ((fmap (badWordsFromDiff . onlyRequired) somebad) :: Either String [BadWords]) 
+          expected = Right $ [BadWords "asdf.cpp" [(12, Line Added "    strcpy(\"kek\");"),
+                                                   (15, Line Added "    more strcpy;")]]
+
+test_badWordsremoved1 = assertEqual result expected
+    where result   = ((fmap (badWordsFromDiff . onlyRequired) removebad) :: Either String [BadWords]) 
+          expected = Right $ [BadWords "asdfC.cpp" [(12, Line Removed "    strcpy(lol, \"42\");")]]
+
+
 nocpp = Right [FileDelta {fileDeltaStatus = Modified, fileDeltaSourceFile = "package.yaml", fileDeltaDestFile = "package.yaml", fileDeltaContent = Hunks [Hunk {hunkSourceRange = Range {rangeStartingLineNumber = 11, rangeNumberOfLines = 1}, hunkDestRange = Range {rangeStartingLineNumber = 10,
 rangeNumberOfLines = 0}, hunkLines = [Line {lineAnnotation = Removed, lineContent = "- ChangeLog.md"}]}]}]
 
@@ -93,7 +114,6 @@ rangeNumberOfLines = 0}, hunkLines = [Line {lineAnnotation = Removed, lineConten
 allcpp = Right [FileDelta {fileDeltaStatus = Modified, fileDeltaSourceFile = "asdf.cpp", fileDeltaDestFile = "asdf.cpp", fileDeltaContent = Hunks [Hunk {hunkSourceRange = Range {rangeStartingLineNumber = 1, rangeNumberOfLines = 0}, hunkDestRange = Range {rangeStartingLineNumber = 2, rangeNumberOfLines = 1}, hunkLines = [Line {lineAnnotation = Added, lineContent = "#include <neshtosi>"}]},Hunk {hunkSourceRange = Range {rangeStartingLineNumber = 4, rangeNumberOfLines = 0}, hunkDestRange = Range {rangeStartingLineNumber = 6, rangeNumberOfLines = 1}, hunkLines = [Line {lineAnnotation = Added, lineContent = "    sprintf(\"%%%ASDQ!@#\", lol);"}]}]},FileDelta {fileDeltaStatus = Created, fileDeltaSourceFile = "asdfC.cpp", fileDeltaDestFile = "asdfC.cpp", fileDeltaContent = Hunks [Hunk {hunkSourceRange = Range {rangeStartingLineNumber = 0, rangeNumberOfLines =
 0}, hunkDestRange = Range {rangeStartingLineNumber = 1, rangeNumberOfLines = 14}, hunkLines = [Line {lineAnnotation = Added, lineContent = "#include <iostream>"},Line {lineAnnotation = Added, lineContent = ""},Line {lineAnnotation = Added, lineContent = "int main()"},Line {lineAnnotation = Added, lineContent = "{"},Line {lineAnnotation = Added, lineContent = "    using std::cout;"},Line {lineAnnotation = Added, lineContent = "    using std::endl;"},Line {lineAnnotation = Added, lineContent = ""},Line {lineAnnotation = Added, lineContent = "    cout<<\"lol\"<<endl;"},Line {lineAnnotation = Added, lineContent = ""},Line {lineAnnotation = Added, lineContent =
 "    char* lol;"},Line {lineAnnotation = Added, lineContent = ""},Line {lineAnnotation = Added, lineContent = "    strcpy(lol, \"42\");"},Line {lineAnnotation = Added, lineContent = "    return 0;"},Line {lineAnnotation = Added, lineContent = "}"}]}]}]
-
 
 -- somecpp diff
 -- diff --git a/asqwe.h b/asqwe.h
@@ -160,3 +180,17 @@ lineContent = ""},Line {lineAnnotation = Added, lineContent = "int main()"},Line
 -- +
 somebad = Right [FileDelta {fileDeltaStatus = Modified, fileDeltaSourceFile = "asdf.cpp", fileDeltaDestFile = "asdf.cpp", fileDeltaContent = Hunks [Hunk {hunkSourceRange = Range {rangeStartingLineNumber = 10, rangeNumberOfLines = 0}, hunkDestRange = Range {rangeStartingLineNumber = 11, rangeNumberOfLines = 5}, hunkLines = [Line {lineAnnotation = Added, lineContent = ""},Line {lineAnnotation = Added, lineContent = "    strcpy(\"kek\");"},Line {lineAnnotation = Added, lineContent =
 ""},Line {lineAnnotation = Added, lineContent = ""},Line {lineAnnotation = Added, lineContent = "    more strcpy;"}]}]},FileDelta {fileDeltaStatus = Modified, fileDeltaSourceFile = "asqwe.h", fileDeltaDestFile = "asqwe.h", fileDeltaContent = Hunks [Hunk {hunkSourceRange = Range {rangeStartingLineNumber = 5, rangeNumberOfLines = 0}, hunkDestRange = Range {rangeStartingLineNumber = 6, rangeNumberOfLines = 1}, hunkLines = [Line {lineAnnotation = Added, lineContent = "    nothing bad here;"}]},Hunk {hunkSourceRange = Range {rangeStartingLineNumber = 6, rangeNumberOfLines = 0}, hunkDestRange = Range {rangeStartingLineNumber = 8, rangeNumberOfLines = 1}, hunkLines = [Line {lineAnnotation = Added, lineContent = "    nothing bad here;"}]},Hunk {hunkSourceRange = Range {rangeStartingLineNumber = 10, rangeNumberOfLines = 0}, hunkDestRange = Range {rangeStartingLineNumber = 13, rangeNumberOfLines = 1}, hunkLines = [Line {lineAnnotation = Added, lineContent = ""}]}]}]
+
+-- remove one bad
+-- diff --git a/asdfC.cpp b/asdfC.cpp
+-- index 77c4c54..4bc9e3b 100644
+-- --- a/asdfC.cpp
+-- +++ b/asdfC.cpp
+-- @@ -9,6 +9,5 @@ int main()
+-- 
+--      char* lol;
+-- 
+-- -    strcpy(lol, "42");
+--      return 0;
+--  }
+removebad = Right [FileDelta {fileDeltaStatus = Modified, fileDeltaSourceFile = "asdfC.cpp", fileDeltaDestFile = "asdfC.cpp", fileDeltaContent = Hunks [Hunk {hunkSourceRange = Range {rangeStartingLineNumber = 9, rangeNumberOfLines = 6}, hunkDestRange = Range {rangeStartingLineNumber = 9, rangeNumberOfLines = 5}, hunkLines = [Line {lineAnnotation = Context, lineContent = ""},Line {lineAnnotation = Context, lineContent = "    char* lol;"},Line {lineAnnotation = Context, lineContent = ""},Line {lineAnnotation = Removed, lineContent = "    strcpy(lol, \"42\");"},Line {lineAnnotation = Context, lineContent = "    return 0;"},Line {lineAnnotation = Context, lineContent = "}"}]}]}]

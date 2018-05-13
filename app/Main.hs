@@ -16,9 +16,6 @@ import Lucid
 usage :: T.Text
 usage = "usage: Pass 6+ arguments in the form: <path-to-git> <commit1> <commit2> <output-path> <list of +1 suffixes> <list of +1 bad words>. Suffixes *must* start with '.'"
 
--- suffixes are hardcoded for now
---suffixes :: [T.Text]
---suffixes = [".cpp", ".h"]
 -- assume git is in PATH
 main :: IO ()
 main = do

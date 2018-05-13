@@ -32,7 +32,7 @@ main = do
         let commit2  = args !! 2
         let outPath  = args !! 3
         let badWords = T.pack <$> drop 4 args
-        let command  = "git -C " ++ gitPath ++ " diff " ++ commit1 ++ " " ++ commit2
+        let command  = "git -C \"" ++ gitPath ++ "\" diff " ++ commit1 ++ " " ++ commit2
         let proc     = shell command
         diff <- readCreateProcess proc ""
         let parsedDiff = parseDiff $ T.pack diff

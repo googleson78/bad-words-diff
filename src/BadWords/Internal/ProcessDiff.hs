@@ -1,10 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module BadWords.Internal.ProcessDiff
-        (isRequiredFile
-        ,filterDiffBySuffixes
-        ,badWordsFromDiff
-        ,BadWords(..)
-        ) where
+module BadWords.Internal.ProcessDiff where
 
 import Text.Diff.Parse.Types
 import Control.Monad

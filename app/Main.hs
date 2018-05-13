@@ -14,11 +14,11 @@ import Data.Either
 import Lucid
 
 usage :: T.Text
-usage = "usage: Pass 5+ arguments in the form: <path-to-git> <commit1> <commit2> <output-path> <list of +1 bad words>."
+usage = "usage: Pass 6+ arguments in the form: <path-to-git> <commit1> <commit2> <output-path> <list of +1 suffixes> <list of +1 bad words>. Suffixes *must* start with '.'"
 
 -- suffixes are hardcoded for now
-suffixes :: [T.Text]
-suffixes = [".cpp", ".h"]
+--suffixes :: [T.Text]
+--suffixes = [".cpp", ".h"]
 -- assume git is in PATH
 main :: IO ()
 main = do
@@ -31,7 +31,7 @@ main = do
         let commit1  = args !! 1
         let commit2  = args !! 2
         let outPath  = args !! 3
-        let badWords = T.pack <$> drop 4 args
+        let (suffixes, badWords) = (\(x, y) -> (T.pack <$> x, T.pack <$> y)) $ span ((=='.') . head) $ drop 4 args
         let command  = "git -C \"" ++ gitPath ++ "\" diff " ++ commit1 ++ " " ++ commit2
         let proc     = shell command
         diff <- readCreateProcess proc ""

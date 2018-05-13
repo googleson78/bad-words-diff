@@ -62,4 +62,4 @@ formatLine badword (n, (Line anno text)) = formatted
 
 formatBadWords :: [T.Text] -> BadWords -> Html ()
 formatBadWords keywords (BadWords file lns) = pre_ (p_ (b_ $ toHtml file) <> formatted)
-    where formatted = L.foldl1' (<>) $ (formatLine keywords) <$> lns
+    where formatted = foldMap (formatLine keywords) lns

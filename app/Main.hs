@@ -32,7 +32,7 @@ main = do
         let commit2  = args !! 2
         let outPath  = args !! 3
         let (suffixes, badWords) = (\(x, y) -> (T.pack <$> x, T.pack <$> y)) $ span ((=='.') . head) $ drop 4 args
-        let command  = "git -C \"" ++ gitPath ++ "\" diff " ++ commit1 ++ " " ++ commit2
+        let command  = "git -C \"" ++ gitPath ++ "\" diff -U0 \"" ++ commit1 ++ "\" \"" ++ commit2 ++ "\""
         let proc     = shell command
         diff <- readCreateProcess proc ""
         let parsedDiff = parseDiff $ T.pack diff

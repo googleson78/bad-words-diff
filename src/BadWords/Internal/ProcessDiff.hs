@@ -20,11 +20,11 @@ hasBadWord :: [T.Text] -> Line -> Bool
 hasBadWord keywords (Line _ text) = or $ fmap (T.isInfixOf `flip` text) keywords
 
 
-tagListLines :: [Line] -> [(Int, Line)] -- ([(Int, Line)], [Int], [Int], [Int])
+tagListLines :: [Line] -> [(Int, Line)]
 tagListLines = reverse . fst' . foldl fn ([], [0..], [0..], [0..]) 
     where fn :: ([(a, Line)], [a], [a], [a]) -> Line -> ([(a, Line)], [a], [a], [a])
-          fn (lns, (x:xs), ys, (_:zs)) ln@(Line Added   _) = ((x, ln) : lns, xs, ys, zs)
-          fn (lns, xs, (y:ys), (_:zs)) ln@(Line Removed _) = ((y, ln) : lns, xs, ys, zs)
+          fn (lns, (x:xs), ys,     (_:zs)) ln@(Line Added   _) = ((x, ln) : lns, xs, ys, zs)
+          fn (lns, xs,     (y:ys), (_:zs)) ln@(Line Removed _) = ((y, ln) : lns, xs, ys, zs)
           fn (lns, (_:xs), (_:ys), (z:zs)) ln@(Line Context _) = ((z, ln) : lns, xs, ys, zs)
           fst' (x, _, _, _) = x
 

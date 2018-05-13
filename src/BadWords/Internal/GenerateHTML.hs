@@ -1,56 +1,71 @@
-{-# LANGUAGE OverloadedStrings, ExtendedDefaultRules, FlexibleContexts, ViewPatterns #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE ExtendedDefaultRules #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ViewPatterns #-}
+
 module BadWords.Internal.GenerateHTML where
 
+--
 import BadWords.Types
 import Text.Diff.Parse.Types
 import Lucid
+import Lucid.Base
 import Data.Monoid
 import qualified Data.Text as T
 import qualified Data.List as L
 import Data.String
 import Data.Maybe
-    
 
 -- fromJust never throws, because inner is a prefix of l
 -- in the case that we call it
 splitBy :: T.Text -> T.Text -> (T.Text, T.Text)
-splitBy word   (T.uncons -> Nothing) = (T.empty, T.empty)
+splitBy _      (T.uncons -> Nothing) = (T.empty, T.empty)
 splitBy word l@(T.uncons -> Just (x, xs))
     | word `T.isPrefixOf` l = (T.empty, fromJust $ T.stripPrefix word l)
     | otherwise              = (x `T.cons` f, t)
         where (f, t) = splitBy word xs 
 
-splitEntire :: T.Text -> T.Text -> [T.Text]
-splitEntire (T.null -> True) text        = [text]
-splitEntire word   (T.uncons -> Nothing) = [""]
-splitEntire word l@(T.uncons -> Just (x, xs)) 
-    | word `T.isPrefixOf` l = "" : word : splitEntire word stripped
+-- perhaps handle empty words in a different way?
+splitEntire :: [T.Text] -> T.Text -> [T.Text]
+splitEntire _          (T.uncons -> Nothing) = [""]
+splitEntire keywords l@(T.uncons -> Just (x, xs)) 
+    | L.any (T.isPrefixOf `flip` l) keywords' = "" : matching : splitEntire keywords' stripped
     | otherwise             = (T.cons x next) : rest
-    where stripped = fromJust $ T.stripPrefix word l
-          (next:rest) = splitEntire word xs
+    where keywords' = filter (/= "") keywords
+          stripped = fromJust $ T.stripPrefix matching l
+          (next:rest) = splitEntire keywords' xs
+          matching = fromJust $ L.find (T.isPrefixOf `flip` l) keywords'
 
+-- help me
+redSpan_ :: (Term [a] result, Lucid.Base.TermRaw arg a, Data.String.IsString arg) => result
 redSpan_   = span_ [style_ "color:red"] 
+greenSpan_ :: (Term [a] result, Lucid.Base.TermRaw arg a, Data.String.IsString arg) => result
 greenSpan_ = span_ [style_ "color:green"] 
+greySpan_ :: (Term [a] result, Lucid.Base.TermRaw arg a, Data.String.IsString arg) => result
 greySpan_  = span_ [style_ "color:grey"] 
+blackSpan_ :: (Term [a] result, Lucid.Base.TermRaw arg a, Data.String.IsString arg) => result
 blackSpan_ = span_ [style_ "color:black"] 
 
 annoToColouredSym :: Annotation -> Html ()
-annoToColouredSym Added   = greenSpan_ $ toHtml "+"
-annoToColouredSym Removed = redSpan_   $ toHtml "-"
-annoToColouredSym Context = toHtml " "
+annoToColouredSym Added   = greenSpan_ $ toHtml ['+']
+annoToColouredSym Removed = redSpan_   $ toHtml ['-']
+annoToColouredSym Context = toHtml [' ']
 
-colourBad :: T.Text -> T.Text -> Html ()
+colourBad :: [T.Text] -> T.Text -> Html ()
 colourBad bad word 
-    | word == bad = redSpan_ $ toHtml $ word
+    | word `elem` bad = redSpan_ $ toHtml $ word
     | otherwise   = toHtml word
 
-
-colourBadWord :: T.Text -> (LineNum, Line) -> Html ()
-colourBadWord badword (n, (Line anno text)) = formatted
+formatLine :: [T.Text] -> (LineNum, Line) -> Html ()
+formatLine badword (n, (Line anno text)) = formatted
     where split = splitEntire badword text
           coloured = foldMap (colourBad badword) split
           colouredAnno = annoToColouredSym anno
           lineNum :: Html () -- huh?
           lineNum = greySpan_ $ toHtml $ T.pack $ show $ n
-          formatted = lineNum <> colouredAnno <> coloured
+          formatted = colouredAnno <> lineNum <> coloured <> br_ []
+
+formatBadWords :: [T.Text] -> BadWords -> Html ()
+formatBadWords keywords (BadWords file lns) = pre_ (p_ (b_ $ toHtml file) <> formatted)
+    where formatted = L.foldl1' (<>) $ (formatLine keywords) <$> lns

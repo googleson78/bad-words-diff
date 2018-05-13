@@ -2,6 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module TestGenerateHTML
     (htf_thisModulesTests
+    ,prop_definitionSplitEntire1
     ) where
 
 import BadWords.Internal.GenerateHTML
@@ -36,13 +37,6 @@ prop_splitByPrefSuffNull' word xs = pref == T.empty && suff == T.empty ==>
     where (pref, suff) = splitBy word xs
 
 -- the concatenation of the resulting list should be the original word
-prop_definitionSplitEntire1 :: T.Text -> T.Text -> Bool
-prop_definitionSplitEntire1 word xs = xs == (T.concat split)
-    where split = splitEntire word xs
-
--- foreach element of the resulting split (which is not the word itself)
--- it should be true that it does not contain word as a subword (infix)
-prop_definitionSplitEntire2 :: T.Text -> T.Text -> Property
-prop_definitionSplitEntire2 word xs = word /= "" && xs /= "" ==> 
-                                      all (not . T.isInfixOf word) $ filter (/=word) split
-    where split = splitEntire word xs
+prop_definitionSplitEntire1 :: [T.Text] -> T.Text -> Bool
+prop_definitionSplitEntire1 words xs = xs == (T.concat split)
+    where split = splitEntire words xs

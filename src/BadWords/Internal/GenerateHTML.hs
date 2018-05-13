@@ -17,16 +17,10 @@ import qualified Data.List as L
 import Data.String
 import Data.Maybe
 
--- fromJust never throws, because inner is a prefix of l
--- in the case that we call it
-splitBy :: T.Text -> T.Text -> (T.Text, T.Text)
-splitBy _      (T.uncons -> Nothing) = (T.empty, T.empty)
-splitBy word l@(T.uncons -> Just (x, xs))
-    | word `T.isPrefixOf` l = (T.empty, fromJust $ T.stripPrefix word l)
-    | otherwise              = (x `T.cons` f, t)
-        where (f, t) = splitBy word xs 
-
 -- perhaps handle empty words in a different way?
+--
+-- fromJust never throws, because matching is a prefix of l
+-- in the case that we call it
 splitEntire :: [T.Text] -> T.Text -> [T.Text]
 splitEntire _          (T.uncons -> Nothing) = [""]
 splitEntire keywords l@(T.uncons -> Just (x, xs)) 

@@ -37,21 +37,21 @@ test_filterSomecpp = assertNotEqual result expected
 
 
 -- bad words + lines test
-test_badWordsNocpp = assertEqual result expected
+test_badWordsNocpp = assertEqual expected result
     where result   = ((fmap (badWordsFromDiff key) nocpp) :: Either String [BadWords])
           expected =  (Right [])
 
-test_badWordsintroduced1 = assertEqual result expected
+test_badWordsintroduced1 = assertEqual expected result
     where result   = ((fmap ((badWordsFromDiff key) . (filterDiffBySuffixes suff)) allcpp) :: Either String [BadWords]) 
           expected = Right $ [(BadWords "asdf.cpp" [(6, Line Added "    sprintf(\"%%%ASDQ!@#\", lol);")]),
                               (BadWords "asdfC.cpp" [(12 , Line Added "    strcpy(lol, \"42\");")])]
 
-test_badWordsintroduced2 = assertEqual result expected
+test_badWordsintroduced2 = assertEqual expected result
     where result   = ((fmap ((badWordsFromDiff key) . (filterDiffBySuffixes suff)) somebad) :: Either String [BadWords]) 
           expected = Right $ [BadWords "asdf.cpp" [(12, Line Added "    strcpy(\"kek\");"),
                                                    (15, Line Added "    more strcpy;")]]
 
-test_badWordsremoved1 = assertEqual result expected
+test_badWordsremoved1 = assertEqual expected result
     where result   = ((fmap ((badWordsFromDiff key) . (filterDiffBySuffixes suff)) removebad) :: Either String [BadWords]) 
           expected = Right $ [BadWords "asdfC.cpp" [(12, Line Removed "    strcpy(lol, \"42\");")]]
 
